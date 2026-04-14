@@ -1,0 +1,31 @@
+{
+  "name": "marketplace-api",
+  "version": "1.0.0",
+  "description": "A marketplace REST API with users, items, and orders",
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node --env-file=.env server.js",
+"dev": "node --env-file=.env --watch server.js",
+    "db:migrate": "prisma migrate deploy",
+    "db:seed": "node --env-file=.env prisma/seed.js",
+    "build": "prisma generate && prisma migrate deploy && node --env-file=.env prisma/seed.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.14.0",
+    "bcrypt": "^5.1.1",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "swagger-ui-express": "^5.0.1",
+    "yamljs": "^0.3.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.29.0",
+    "eslint": "^9.29.0",
+    "globals": "^16.2.0",
+    "prettier": "^3.6.1",
+    "prisma": "^5.14.0"
+  }
+}

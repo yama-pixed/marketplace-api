@@ -1,0 +1,77 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items  Item[]
+  orders Order[] @relation("BuyerOrders")
+}
+
+model Item {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  price       Float
+  quantity    Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  sellerId Int
+  seller   User @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+
+  orderItems OrderItem[]
+}
+
+model Order {
+  id        Int         @id @default(autoincrement())
+  status    OrderStatus @default(PENDING)
+  total     Float
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  buyerId Int
+  buyer   User @relation("BuyerOrders", fields: [buyerId], references: [id], onDelete: Cascade)
+
+  orderItems OrderItem[]
+}
+
+model OrderItem {
+  id       Int   @id @default(autoincrement())
+  quantity Int
+  price    Float // snapshot of item price at time of order
+
+  orderId Int
+  order   Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  itemId Int
+  item   Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
+}
