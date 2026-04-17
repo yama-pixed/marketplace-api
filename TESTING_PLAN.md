@@ -416,3 +416,114 @@ Success — 200 OK:
 404 Not Found:
 - Login as Admin → id = 9999
 - Expect 404
+## 5. Reviews Endpoints
+
+### GET /reviews
+Access Control: Public
+
+Success — 200 OK:
+- No auth required
+- Execute → Expect 200 array of all reviews
+
+---
+
+### GET /reviews/{id}
+Access Control: Public
+
+Success — 200 OK:
+- id = 1
+- Expect 200 with review details
+
+400 Bad Request:
+- id = -5
+- Expect 400
+
+404 Not Found:
+- id = 9999
+- Expect 404
+
+---
+
+### POST /reviews
+Access Control: Any authenticated user
+Setup: Login as bob@example.com / Password123! → Authorize
+
+Success — 201 Created:
+- Body: { "rating": 5, "comment": "Amazing keyboard!", "itemId": 3 }
+- Expect 201 with new review
+
+400 Bad Request — Missing fields:
+- Body: { "comment": "nice" }
+- Expect 400 — "rating and itemId are required"
+
+400 Bad Request — Invalid rating:
+- Body: { "rating": 10, "itemId": 1 }
+- Expect 400 — "rating must be between 1 and 5"
+
+404 Not Found — Item doesn't exist:
+- Body: { "rating": 5, "itemId": 9999 }
+- Expect 404
+
+401 Unauthorized:
+- Remove JWT → Execute
+- Expect 401
+
+---
+
+### PUT /reviews/{id}
+Access Control: Owner or Admin
+Setup: Login as bob@example.com / Password123! → Authorize (Bob owns reviews 1 and 2)
+
+Success — Owner updates own review:
+- id = 1
+- Body: { "rating": 4, "comment": "Good but gets hot" }
+- Expect 200 with updated review
+
+400 Bad Request — No fields:
+- Body: {}
+- Expect 400
+
+400 Bad Request — Invalid rating:
+- Body: { "rating": 99 }
+- Expect 400
+
+401 Unauthorized:
+- Remove JWT → Expect 401
+
+403 Forbidden:
+- Login as alice@example.com / Password123! → id = 1 (Bob's review)
+- Body: { "rating": 1 }
+- Expect 403
+
+404 Not Found:
+- Login as Admin → id = 9999
+- Body: { "rating": 3 }
+- Expect 404
+
+Success — Admin updates any review:
+- Login as admin@example.com / Admin123! → id = 1
+- Body: { "comment": "Admin edited this" }
+- Expect 200
+
+---
+
+### DELETE /reviews/{id}
+Access Control: Owner or Admin
+Setup: Login as bob@example.com / Password123! → Authorize
+
+Success — Owner deletes own review:
+- First create a new review via POST /reviews
+- Note the returned review id
+- Set id = that new review's id
+- Expect 200 — "Review deleted successfully"
+
+401 Unauthorized:
+- Remove JWT → Expect 401
+
+403 Forbidden:
+- Login as alice@example.com / Password123! → id = 1 (Bob's review)
+- Expect 403
+
+404 Not Found:
+- Login as Admin → id = 9999
+- Expect 404
