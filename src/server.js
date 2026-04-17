@@ -1,3 +1,4 @@
+import reviewsRouter from './routes/reviews.js';
 import express from 'express';
 import YAML from 'yamljs';
 import swaggerUi from 'swagger-ui-express';
@@ -18,6 +19,7 @@ app.use(express.json());
 app.use('/api/auth', authRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/items', itemsRouter);
+app.use('/api/reviews', reviewsRouter);
 app.use('/api/orders', ordersRouter);
 
 // Swagger UI
