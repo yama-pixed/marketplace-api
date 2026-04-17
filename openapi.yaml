@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Marketplace API
   description: |
-    A RESTful marketplace API with Users, Items, and Orders.
+    A RESTful marketplace API with Users, Items, Orders, and Reviews.
     
     ## Authentication
     Use the **Authorize** button (🔒) at the top to paste your JWT token as:
@@ -86,6 +86,28 @@ components:
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
 
+    Review:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        rating: { type: integer, example: 5 }
+        comment: { type: string, example: Great product! }
+        userId: { type: integer, example: 2 }
+        itemId: { type: integer, example: 1 }
+        user:
+          type: object
+          properties:
+            id: { type: integer }
+            name: { type: string }
+            email: { type: string }
+        item:
+          type: object
+          properties:
+            id: { type: integer }
+            title: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
     Error:
       type: object
       properties:
@@ -100,6 +122,8 @@ tags:
     description: Marketplace items
   - name: Orders
     description: Orders and order management
+  - name: Reviews
+    description: Item reviews
 
 paths:
   # ── AUTH ──────────────────────────────────────────────────────────────────
@@ -436,7 +460,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Error' }
         '403':
-          description: Forbidden – not the seller
+          description: Forbidden
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Error' }
@@ -527,8 +551,6 @@ paths:
               items:
                 - itemId: 1
                   quantity: 1
-                - itemId: 2
-                  quantity: 2
       responses:
         '201':
           description: Order placed
@@ -536,7 +558,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Order' }
         '400':
-          description: Bad request (missing items, insufficient stock)
+          description: Bad request
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Error' }
@@ -669,6 +691,165 @@ paths:
               schema: { $ref: '#/components/schemas/Error' }
         '404':
           description: Order not found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  # ── REVIEWS ───────────────────────────────────────────────────────────────
+  /reviews:
+    get:
+      tags: [Reviews]
+      summary: List all reviews (Public)
+      responses:
+        '200':
+          description: List of reviews
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Review' }
+
+    post:
+      tags: [Reviews]
+      summary: Create a review (Authenticated)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rating, itemId]
+              properties:
+                rating: { type: integer, example: 5 }
+                comment: { type: string, example: Great product! }
+                itemId: { type: integer, example: 1 }
+      responses:
+        '201':
+          description: Review created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Review' }
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '404':
+          description: Item not found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /reviews/{id}:
+    get:
+      tags: [Reviews]
+      summary: Get a review by ID (Public)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, example: 1 }
+      responses:
+        '200':
+          description: Review found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Review' }
+        '400':
+          description: Invalid ID
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '404':
+          description: Review not found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+    put:
+      tags: [Reviews]
+      summary: Update a review (Owner or Admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, example: 1 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                rating: { type: integer, example: 4 }
+                comment: { type: string, example: Updated comment }
+      responses:
+        '200':
+          description: Review updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Review' }
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '404':
+          description: Review not found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+    delete:
+      tags: [Reviews]
+      summary: Delete a review (Owner or Admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, example: 1 }
+      responses:
+        '200':
+          description: Review deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '404':
+          description: Review not found
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Error' }
