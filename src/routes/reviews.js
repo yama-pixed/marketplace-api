@@ -4,7 +4,7 @@ import { authenticate, requireOwnerOrAdmin } from '../middleware/auth.js';
 
 const router = Router();
 
-// GET /api/reviews — Public: list all reviews
+// GET /api/reviews — Public
 router.get('/', async (req, res) => {
   const reviews = await prisma.review.findMany({
     include: {
@@ -31,7 +31,7 @@ router.get('/:id', async (req, res) => {
   return res.json(review);
 });
 
-// POST /api/reviews — Authenticated users
+// POST /api/reviews — Authenticated
 router.post('/', authenticate, async (req, res) => {
   const { rating, comment, itemId } = req.body;
   if (!rating || !itemId) return res.status(400).json({ error: 'rating and itemId are required' });
@@ -91,7 +91,7 @@ router.delete(
     const id = Number(req.params.id);
     if (isNaN(id) || id < 1) return res.status(400).json({ error: 'Invalid review ID' });
     await prisma.review.delete({ where: { id } });
-    return res.json({ message: 'Review deleted successfully' });
+    return res.status(204).send();
   }
 );
 

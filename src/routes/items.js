@@ -4,7 +4,7 @@ import { authenticate, requireOwnerOrAdmin } from '../middleware/auth.js';
 
 const router = Router();
 
-// GET /api/items — Public: list all items
+// GET /api/items — Public
 router.get('/', async (req, res) => {
   const items = await prisma.item.findMany({
     include: {
@@ -19,7 +19,6 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   const id = Number(req.params.id);
   if (isNaN(id) || id < 1) return res.status(400).json({ error: 'Invalid item ID' });
-
   const item = await prisma.item.findUnique({
     where: { id },
     include: { seller: { select: { id: true, name: true, email: true } } },
@@ -28,7 +27,7 @@ router.get('/:id', async (req, res) => {
   return res.json(item);
 });
 
-// POST /api/items — Authenticated users
+// POST /api/items — Authenticated
 router.post('/', authenticate, async (req, res) => {
   const { title, description, price, quantity } = req.body;
   if (!title || price === undefined) {
@@ -37,15 +36,8 @@ router.post('/', authenticate, async (req, res) => {
   if (typeof price !== 'number' || price < 0) {
     return res.status(400).json({ error: 'price must be a non-negative number' });
   }
-
   const item = await prisma.item.create({
-    data: {
-      title,
-      description,
-      price,
-      quantity: quantity ?? 1,
-      sellerId: req.user.id,
-    },
+    data: { title, description, price, quantity: quantity ?? 1, sellerId: req.user.id },
     include: { seller: { select: { id: true, name: true, email: true } } },
   });
   return res.status(201).json(item);
@@ -62,7 +54,6 @@ router.put(
   async (req, res) => {
     const id = Number(req.params.id);
     if (isNaN(id) || id < 1) return res.status(400).json({ error: 'Invalid item ID' });
-
     const { title, description, price, quantity } = req.body;
     if (!title && description === undefined && price === undefined && quantity === undefined) {
       return res.status(400).json({ error: 'Provide at least one field to update' });
@@ -70,13 +61,11 @@ router.put(
     if (price !== undefined && (typeof price !== 'number' || price < 0)) {
       return res.status(400).json({ error: 'price must be a non-negative number' });
     }
-
     const data = {};
     if (title) data.title = title;
     if (description !== undefined) data.description = description;
     if (price !== undefined) data.price = price;
     if (quantity !== undefined) data.quantity = quantity;
-
     const item = await prisma.item.update({
       where: { id },
       data,
@@ -97,9 +86,8 @@ router.delete(
   async (req, res) => {
     const id = Number(req.params.id);
     if (isNaN(id) || id < 1) return res.status(400).json({ error: 'Invalid item ID' });
-
     await prisma.item.delete({ where: { id } });
-    return res.json({ message: 'Item deleted successfully' });
+    return res.status(204).send();
   }
 );
 
